@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pharmacist Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <header>
+        <div class="navbar">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <span
+                    style="font-size: 2.2rem; font-weight: 900; color: #ffffff; letter-spacing: -1px; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">Medi<span
+                        style="color: #69f0ae;">Hub</span></span>
+                <h1><i class="fas fa-notes-medical"></i> Pharmacist Dashboard</h1>
+            </div>
+            <div class="nav-links">
+                <span><i class="fas fa-user-circle"></i> Welcome, {{ session['username'] }}</span>
+                <a href="{{ url_for('reports') }}"><i class="fas fa-chart-bar"></i> View Reports</a>
+                <a href="{{ url_for('ai_analysis_dashboard') }}"><i class="fas fa-robot"></i> AI Helper</a>
+                <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for message in messages %}
+            <p>{{ message }}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <div class="card" style="text-align: center;">
+            <h2><i class="fas fa-search"></i> Search Prescription</h2>
+            <form action="{{ url_for('pharmacist_dashboard') }}" method="GET" style="max-width: 500px; margin: 0 auto;">
+                <div class="form-group" style="display: flex; gap: 10px;">
+                    <input type="number" name="prescription_id" placeholder="Enter Prescription ID" required
+                        value="{{ request.args.get('prescription_id', '') }}">
+                    <button type="submit"><i class="fas fa-search"></i> Search</button>
+                </div>
+            </form>
+        </div>
+
+        {% if prescription %}
+        <div class="card">
+            <div style="display: flex; justify-content: space-between;">
+                <h2><i class="fas fa-file-medical"></i> Prescription #{{ prescription.prescription_id }} Details</h2>
+                <h3 class="status-{{ prescription.status }}">Status: {{ prescription.status|upper }}</h3>
+            </div>
+            <p><strong><i class="fas fa-user-injured"></i> Patient:</strong> {{ prescription.patient_name }}</p>
+            <p><strong><i class="fas fa-user-md"></i> Doctor:</strong> {{ prescription.doctor_name }}</p>
+            <p><strong><i class="fas fa-calendar-alt"></i> Date:</strong> {{ prescription.date }}</p>
+
+            <h3><i class="fas fa-pills"></i> Medicines</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Medicine</th>
+                        <th>Dosage</th>
+                        <th>Days/Qty</th>
+                        <th>Unit Price</th>
+                        <th>Stock Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in details %}
+                    <tr>
+                        <td>{{ item.medicine_name }}</td>
+                        <td>{{ item.dosage }}</td>
+                        <td>{{ item.days }}</td>
+                        <td>₹{{ item.price }}</td>
+                        <td class="{{ 'text-danger' if item.stock < item.days else 'text-success' }}">
+                            {{ item.stock }} Available
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div style="margin-top: 2rem; border-top: 1px solid #ccc; padding-top: 1rem; text-align: right;">
+                {% if prescription.status == 'pending' %}
+                <form action="{{ url_for('validate_prescription', p_id=prescription.prescription_id) }}" method="POST">
+                    <button type="submit" class="btn-success"><i class="fas fa-check-circle"></i> Validate & Generate
+                        Bill</button>
+                </form>
+                {% elif prescription.status == 'validated' %}
+                <div class="bill-box">
+                    <h3><i class="fas fa-file-invoice-dollar"></i> Bill Generated</h3>
+                    <h1>Total Amount: ₹{{ bill.total_amount if bill else '0.00' }}</h1>
+                    <p>Status: <span style="color:red">{{ bill.payment_status }}</span></p>
+                    {% if bill %}
+                    <a href="{{ url_for('pay_bill', bill_id=bill.bill_id) }}"><button><i
+                                class="fas fa-money-bill-wave"></i> Mark as Paid</button></a>
+                    {% endif %}
+                </div>
+                {% elif prescription.status == 'dispensed' %}
+                <div class="bill-box" style="background-color: #d4edda;">
+                    <h3><i class="fas fa-check-double"></i> Dispensed & Paid</h3>
+                    <h1>Total Paid: ₹{{ bill.total_amount if bill else '0.00' }}</h1>
+                    <p>Transaction Complete</p>
+                    {% if bill %}
+                    <a href="{{ url_for('invoice', bill_id=bill.bill_id) }}" target="_blank"><button><i
+                                class="fas fa-print"></i> View
+                            Invoice</button></a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% elif request.args.get('prescription_id') %}
+        <div class="card" style="text-align: center; color: red;">
+            <p><i class="fas fa-exclamation-circle"></i> Prescription ID not found.</p>
+        </div>
+        {% endif %}
+
+
+        <!-- Inventory Alerts Section -->
+        <div class="card">
+            {% if low_stock_items %}
+            <h2 style="color: var(--danger-color);"><i class="fas fa-exclamation-triangle"></i> Inventory Alerts (Low
+                Stock)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Medicine</th>
+                        <th>Current Stock</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for med in low_stock_items %}
+                    <tr>
+                        <td>{{ med.name }}</td>
+                        <td><strong>{{ med.quantity }}</strong></td>
+                        <td><span class="status-badge" style="background: #ffebee; color: #c62828;">LOW STOCK</span>
+                        </td>
+                        <td><button class="btn"
+                                style="background: var(--warning-color); padding: 5px 10px; font-size: 0.8em;"><i
+                                    class="fas fa-truck-loading"></i> Request Stock</button></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <h2 style="color: var(--success-color);"><i class="fas fa-check-circle"></i> Inventory Status</h2>
+            <p style="text-align: center; color: var(--success-color); font-size: 1.2em; padding: 20px;">
+                <i class="fas fa-shield-alt"></i> All stock levels are healthy.
+            </p>
+            {% endif %}
+        </div>
+
+        <!-- Sales & Customers Section -->
+        <div class="flex-row">
+            <div class="flex-col card">
+                <h2><i class="fas fa-shopping-cart"></i> Recent Sales</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Bill #</th>
+                            <th>Date</th>
+                            <th>Patient</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sale in sales %}
+                        <tr>
+                            <td>{{ sale.bill_id }}</td>
+                            <td>{{ sale.generated_at }}</td>
+                            <td>{{ sale.patient_name }}</td>
+                            <td>₹{{ sale.total_amount }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4">No recent sales.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="flex-col card">
+                <h2><i class="fas fa-address-book"></i> Customer Details</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Contact</th>
+                            <th>Age/Gender</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in patients %}
+                        <tr>
+                            <td>{{ p.patient_id }}</td>
+                            <td>{{ p.name }}</td>
+                            <td>{{ p.contact }}</td>
+                            <td>{{ p.age }} / {{ p.gender }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4">No patients found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

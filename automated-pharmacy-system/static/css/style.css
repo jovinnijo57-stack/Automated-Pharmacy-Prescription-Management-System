@@ -1,0 +1,447 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+* {
+    box-sizing: border-box;
+}
+
+:root {
+    /* Medical Teal/Cyan Theme */
+    --primary-color: #008080;
+    /* Teal */
+    --primary-dark: #006666;
+    --primary-light: #e0f2f1;
+
+    --success-color: #26a69a;
+    --warning-color: #ffa726;
+    --danger-color: #ef5350;
+
+    --bg-color: #e0f7fa;
+    /* Very Light Cyan */
+    --card-bg: #ffffff;
+    --text-main: #004d40;
+    --text-light: #546e7a;
+
+    --shadow-sm: 0 2px 4px rgba(0, 77, 64, 0.05);
+    --shadow-md: 0 4px 8px rgba(0, 77, 64, 0.1);
+    --shadow-lg: 0 10px 20px rgba(0, 77, 64, 0.15);
+
+    --radius: 16px;
+    --transition: all 0.3s ease;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    line-height: 1.6;
+
+    /* Subtle Medical Background Pattern */
+    background-image: radial-gradient(#b2dfdb 1px, transparent 1px), radial-gradient(#b2dfdb 1px, transparent 1px);
+    background-size: 20px 20px;
+    background-position: 0 0, 10px 10px;
+
+    /* Ensure full height for centering if needed, but margin: 80px auto works for login */
+    min-height: 100vh;
+}
+
+/* ... (Animations skipped for brevity in replacement block if not contiguous, but here we are replacing top block) ... */
+
+/* Jumping to Login Container modification separately or if contiguous? 
+   The replace_file_content tool works on a contiguous block.
+   I cannot do both in one go if they are far apart.
+   I will do the box-sizing first (top of file), then the login-container (bottom of file).
+*/
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    animation: fadeIn 0.6s ease-out;
+}
+
+/* Header & Nav */
+header {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: white;
+    padding: 1rem 0;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-md);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.navbar h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.nav-links {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.nav-links a {
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    transition: var(--transition);
+}
+
+.nav-links a:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+}
+
+/* Cards */
+.card {
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 2rem;
+    transition: var(--transition);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    animation: slideIn 0.5s ease-out;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+.card h2 {
+    margin-top: 0;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--bg-color);
+    color: var(--primary-dark);
+    font-size: 1.5rem;
+}
+
+/* Forms */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-main);
+}
+
+input[type="text"],
+input[type="password"],
+input[type="number"],
+select,
+textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 1rem;
+    transition: var(--transition);
+    background: #fafafa;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    background: white;
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+/* Input Icons */
+.input-icon-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.input-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-light);
+    font-size: 1.1rem;
+    pointer-events: none;
+    z-index: 10;
+}
+
+/* Buttons */
+button,
+.btn {
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    font-family: inherit;
+    transition: var(--transition);
+    display: inline-block;
+    text-align: center;
+}
+
+button[type="submit"] {
+    background: var(--primary-color);
+    color: white;
+    width: 100%;
+    box-shadow: 0 4px 6px rgba(0, 123, 255, 0.2);
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-success {
+    background-color: var(--success-color) !important;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #27ae60 !important;
+}
+
+/* Tables */
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 1rem;
+    overflow: hidden;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+}
+
+th {
+    background-color: var(--primary-light);
+    color: var(--primary-dark);
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+td {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    background: white;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+tr:hover td {
+    background-color: #f8f9fa;
+}
+
+/* Status Badges */
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+/* Login Page Only */
+.login-container {
+    max-width: 380px;
+    margin: 80px auto;
+}
+
+.login-container h2 {
+    text-align: center;
+    color: var(--primary-color);
+}
+
+/* Utility */
+.flex-row {
+    display: flex;
+    gap: 30px;
+}
+
+.flex-col {
+    flex: 1;
+}
+
+@media (max-width: 768px) {
+    .flex-row {
+        flex-direction: column;
+    }
+}
+
+.flash-messages p {
+    background: #d4edda;
+    color: #155724;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 5px solid #28a745;
+    margin-bottom: 1rem;
+    animation: slideIn 0.3s ease-out;
+}
+
+/* --- Intro Animation Styles --- */
+.intro-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--primary-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: transform 0.8s ease-in-out, opacity 0.8s ease-out, visibility 0.8s ease-out;
+}
+
+.intro-content {
+    text-align: center;
+    color: white;
+}
+
+.intro-logo {
+    font-size: 4rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    animation: bounceIn 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    justify-content: center;
+}
+
+.intro-logo i {
+    font-size: 3.5rem;
+}
+
+.intro-tagline {
+    font-size: 1.2rem;
+    margin-top: 10px;
+    opacity: 0;
+    animation: fadeInUp 0.8s ease-out 0.5s forwards;
+}
+
+.intro-hidden {
+    transform: translateY(-100%);
+    pointer-events: none;
+}
+
+.intro-loader {
+    width: 200px;
+    height: 4px;
+    background: rgba(255,255,255,0.3);
+    margin: 20px auto 0;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.intro-bar {
+    height: 100%;
+    background: white;
+    width: 0%;
+    animation: fillWidth 2.5s ease-in-out forwards;
+}
+
+@keyframes fillWidth {
+    0% { width: 0%; }
+    100% { width: 100%; }
+}
+
+@keyframes bounceIn {
+    0% {
+        transform: scale(0.3);
+        opacity: 0;
+    }
+
+    50% {
+        transform: scale(1.05);
+        opacity: 1;
+    }
+
+    70% {
+        transform: scale(0.9);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

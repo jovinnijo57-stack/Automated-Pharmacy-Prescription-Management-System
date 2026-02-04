@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Prescription Analysis</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .analysis-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .input-section {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .result-section {
+            flex: 1;
+            min-width: 300px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid #ddd;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            background: #eee;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .tab-btn.active {
+            background: #007bff;
+            color: white;
+        }
+
+        .form-section {
+            display: none;
+        }
+
+        .form-section.active {
+            display: block;
+        }
+
+        .ai-response {
+            white-space: pre-wrap;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .upload-preview {
+            max-width: 100%;
+            margin-top: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="navbar">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <span style="font-size: 2.2rem; font-weight: 900; color: #ffffff;">Medi<span
+                        style="color: #69f0ae;">Hub</span></span>
+                <h1><i class="fas fa-robot"></i> AI Prescription Assistant</h1>
+            </div>
+            <div class="nav-links">
+                <span><i class="fas fa-user-circle"></i> {{ session['username'] }}</span>
+                {% if session['role'] == 'pharmacist' %}
+                <a href="{{ url_for('pharmacist_dashboard') }}">Dashboard</a>
+                {% elif session['role'] == 'doctor' %}
+                <a href="{{ url_for('doctor_dashboard') }}">Dashboard</a>
+                {% endif %}
+                <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for message in messages %}
+            <p>{{ message }}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <div class="analysis-container">
+            <!-- Left Side: Input -->
+            <div class="input-section card">
+                <h2>Input Source</h2>
+                <div class="tab-buttons">
+                    <button class="tab-btn active" onclick="showTab('db')"><i class="fas fa-database"></i> Database
+                        Record</button>
+                    <button class="tab-btn" onclick="showTab('upload')"><i class="fas fa-upload"></i> Upload
+                        Image</button>
+                </div>
+
+                <!-- Tab 1: Database -->
+                <div id="db-form" class="form-section active">
+                    <p>Select an existing prescription from the system to analyze.</p>
+                    <form action="{{ url_for('analyze_prescription') }}" method="POST">
+                        <input type="hidden" name="source_type" value="database">
+                        <div class="form-group">
+                            <label>Select Prescription ID</label>
+                            <select name="prescription_id" required style="width: 100%; padding: 10px;">
+                                {% for p in prescriptions %}
+                                <option value="{{ p.prescription_id }}">
+                                    #{{ p.prescription_id }} - {{ p.patient_name }} ({{ p.date }})
+                                </option>
+                                {% else %}
+                                <option disabled>No prescriptions found</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn-primary" onclick="showLoading()">
+                            <i class="fas fa-magic"></i> Analyze Record
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Tab 2: Upload -->
+                <div id="upload-form" class="form-section">
+                    <p>Upload a photo of a physical prescription to analyze.</p>
+                    <form action="{{ url_for('analyze_prescription') }}" method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="source_type" value="upload">
+                        <div class="form-group">
+                            <label>Upload Image (JPG, PNG)</label>
+                            <input type="file" name="file" accept="image/*" onchange="previewImage(this)" required>
+                            <img id="img-preview" class="upload-preview" src="#" alt="Preview">
+                        </div>
+                        <button type="submit" class="btn-primary" onclick="showLoading()">
+                            <i class="fas fa-magic"></i> Analyze Image
+                        </button>
+                    </form>
+                </div>
+
+                <div id="loading-indicator" class="loading">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p>AI is analyzing the prescription... Please wait.</p>
+                </div>
+            </div>
+
+            <!-- Right Side: Result -->
+            <div class="result-section">
+                <h2><i class="fas fa-notes-medical"></i> AI Analysis Result</h2>
+                {% if analysis_result %}
+                <div class="ai-response">
+                    {{ analysis_result | safe }}
+                </div>
+                {% else %}
+                <div style="color: #777; text-align: center; margin-top: 50px;">
+                    <i class="fas fa-robot" style="font-size: 3rem; color: #ddd;"></i>
+                    <p>Select a prescription or upload an image to see the AI analysis here.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showTab(tabName) {
+            document.querySelectorAll('.form-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+            if (tabName === 'db') {
+                document.getElementById('db-form').classList.add('active');
+                document.querySelector('.tab-buttons button:nth-child(1)').classList.add('active');
+            } else {
+                document.getElementById('upload-form').classList.add('active');
+                document.querySelector('.tab-buttons button:nth-child(2)').classList.add('active');
+            }
+        }
+
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    var img = document.getElementById('img-preview');
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function showLoading() {
+            document.getElementById('loading-indicator').style.display = 'block';
+        }
+    </script>
+</body>
+
+</html>

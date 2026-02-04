@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient History</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .history-card {
+            margin-bottom: 20px;
+            border-left: 5px solid #007bff;
+        }
+
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            color: white;
+        }
+
+        .status-pending {
+            background-color: #ffc107;
+            color: black;
+        }
+
+        .status-validated {
+            background-color: #17a2b8;
+        }
+
+        .status-dispensed {
+            background-color: #28a745;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="navbar">
+            <h1><i class="fas fa-history"></i> Patient History</h1>
+            <div class="nav-links">
+                <a href="{{ url_for('doctor_dashboard') }}"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+                <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <h2><i class="fas fa-user-injured"></i> Patient Details</h2>
+            {% if patient %}
+            <p><strong><i class="fas fa-user"></i> Name:</strong> {{ patient.name }}</p>
+            <p><strong><i class="fas fa-venus-mars"></i> Age/Gen:</strong> {{ patient.age }} / {{ patient.gender }}</p>
+            <p><strong><i class="fas fa-allergies"></i> Allergies:</strong> {{ patient.allergies }}</p>
+            <p><strong><i class="fas fa-phone"></i> Contact:</strong> {{ patient.contact }}</p>
+            {% else %}
+            <p>Patient not found.</p>
+            {% endif %}
+        </div>
+
+        <h3><i class="fas fa-file-medical-alt"></i> Prescription History</h3>
+        {% if history %}
+        {% for item in history %}
+        <div class="card history-card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h4><i class="fas fa-prescription"></i> Prescription ID: #{{ item.prescription_id }}</h4>
+                <span class="status-badge status-{{ item.status }}">{{ item.status|upper }}</span>
+            </div>
+            <p><strong><i class="fas fa-calendar-alt"></i> Date:</strong> {{ item.date }}</p>
+            <p><strong><i class="fas fa-user-md"></i> Doctor:</strong> {{ item.doctor_name }}</p>
+
+            <table style="margin-top: 10px; width: 100%;">
+                <thead>
+                    <tr>
+                        <th>Medicine</th>
+                        <th>Dosage</th>
+                        <th>Days/Qty</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for detail in item.details %}
+                    <tr>
+                        <td>{{ detail.medicine_name }}</td>
+                        <td>{{ detail.dosage }}</td>
+                        <td>{{ detail.days }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p>No prescription history found for this patient.</p>
+        {% endif %}
+    </div>
+</body>
+
+</html>

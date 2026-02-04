@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Reports - MediHub</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .metric-card {
+            text-align: center;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #ffffff, #f8f9fa);
+            border: 1px solid #e9ecef;
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 10px 0;
+        }
+
+        .metric-label {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 20px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="navbar">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <span
+                    style="font-size: 2.2rem; font-weight: 900; color: #ffffff; letter-spacing: -1px; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">Medi<span
+                        style="color: #69f0ae;">Hub</span></span>
+                <h1><i class="fas fa-chart-line"></i> System Analytics</h1>
+            </div>
+            <div class="nav-links">
+                {% if session['role'] == 'admin' %}
+                <a href="{{ url_for('admin_dashboard') }}"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+                {% else %}
+                <a href="{{ url_for('pharmacist_dashboard') }}"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+                {% endif %}
+                <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Key Metrics -->
+        <div class="flex-row" style="margin-bottom: 30px;">
+            <div class="card metric-card flex-col">
+                <div class="metric-value"><i class="fas fa-rupee-sign" style="font-size: 0.7em;"></i>{{
+                    "%.2f"|format(total_revenue) }}</div>
+                <div class="metric-label">Total Revenue</div>
+            </div>
+            <div class="card metric-card flex-col">
+                <div class="metric-value">{{ total_prescriptions }}</div>
+                <div class="metric-label">Total Prescriptions</div>
+            </div>
+            <div class="card metric-card flex-col">
+                <div class="metric-value">{{ pending_count }}</div>
+                <div class="metric-label">Pending Validations</div>
+            </div>
+            <div class="card metric-card flex-col">
+                <div class="metric-value">{{ low_stock_count }}</div>
+                <div class="metric-label">Low Stock Alerts</div>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <!-- Top Medicines Chart -->
+            <div class="chart-container">
+                <h3><i class="fas fa-pills"></i> Most Dispensed Medicines</h3>
+                <canvas id="topMedsChart"></canvas>
+            </div>
+
+            <!-- Revenue Status Chart -->
+            <div class="chart-container">
+                <h3><i class="fas fa-chart-pie"></i> Prescription Status Overview</h3>
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Detailed Low Stock Table -->
+        <div class="card">
+            <h3 style="color: var(--danger-color);"><i class="fas fa-exclamation-triangle"></i> Low Stock Inventory (<
+                    100 units)</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Medicine</th>
+                                <th>Current Stock</th>
+                                <th>Price</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for med in low_stock_items %}
+                            <tr>
+                                <td>{{ med.name }}</td>
+                                <td><strong>{{ med.quantity }}</strong></td>
+                                <td>₹{{ med.price }}</td>
+                                <td><span class="status-badge"
+                                        style="background: #ffebee; color: #c62828;">CRITICAL</span></td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4">No critical stock alerts.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+        </div>
+    </div>
+
+    <script>
+        // Data passed from Flask
+        const topMedsNames = JSON.parse('{{ top_meds_names | tojson }}');
+        const topMedsCounts = JSON.parse('{{ top_meds_counts | tojson }}');
+        const statusLabels = JSON.parse('{{ status_labels | tojson }}');
+        const statusCounts = JSON.parse('{{ status_counts | tojson }}');
+
+        // Top Medicines Bar Chart
+        new Chart(document.getElementById('topMedsChart'), {
+            type: 'bar',
+            data: {
+                labels: topMedsNames,
+                datasets: [{
+                    label: 'Units Dispensed',
+                    data: topMedsCounts,
+                    backgroundColor: 'rgba(0, 128, 128, 0.6)',
+                    borderColor: 'rgba(0, 128, 128, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+
+        // Status Pie Chart
+        new Chart(document.getElementById('statusChart'), {
+            type: 'doughnut',
+            data: {
+                labels: statusLabels,
+                datasets: [{
+                    data: statusCounts,
+                    backgroundColor: [
+                        '#ffc107', // Pending
+                        '#17a2b8', // Validated
+                        '#28a745'  // Dispensed
+                    ]
+                }]
+            }
+        });
+    </script>
+</body>
+
+</html>
