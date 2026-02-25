@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice #{{ bill.bill_id }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .invoice-box {
+            max-width: 800px;
+            margin: auto;
+            padding: 30px;
+            border: 1px solid #eee;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+            font-size: 16px;
+            line-height: 24px;
+            font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif;
+            color: #555;
+            background: white;
+        }
+
+        .invoice-box table {
+            width: 100%;
+            line-height: inherit;
+            text-align: left;
+        }
+
+        .invoice-box table td {
+            padding: 5px;
+            vertical-align: top;
+        }
+
+        .invoice-box table tr td:nth-child(2) {
+            text-align: right;
+        }
+
+        .invoice-box table tr.top table td {
+            padding-bottom: 20px;
+        }
+
+        .invoice-box table tr.information table td {
+            padding-bottom: 40px;
+        }
+
+        .invoice-box table tr.heading td {
+            background: #eee;
+            border-bottom: 1px solid #ddd;
+            font-weight: bold;
+        }
+
+        .invoice-box table tr.details td {
+            padding-bottom: 20px;
+        }
+
+        .invoice-box table tr.item td {
+            border-bottom: 1px solid #eee;
+        }
+
+        .invoice-box table tr.item.last td {
+            border-bottom: none;
+        }
+
+        .invoice-box table tr.total td:nth-child(2) {
+            border-top: 2px solid #eee;
+            font-weight: bold;
+        }
+
+        .print-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        @media print {
+
+            .print-btn,
+            .navbar {
+                display: none;
+            }
+
+            .invoice-box {
+                box-shadow: none;
+                border: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div style="text-align: center;">
+        <button class="print-btn" onclick="window.print()">Print Invoice</button>
+    </div>
+
+    <div class="invoice-box">
+        <table cellpadding="0" cellspacing="0">
+            <tr class="top">
+                <td colspan="2">
+                    <table>
+                        <tr>
+                            <td class="title">
+                                <h1>MediHub Invoice</h1>
+                            </td>
+
+                            <td>
+                                Invoice #: {{ bill.bill_id }}<br>
+                                Created: {{ bill.generated_at }}<br>
+                                Status: {{ bill.payment_status }}
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+
+            <tr class="information">
+                <td colspan="2">
+                    <table>
+                        <tr>
+                            <td>
+                                <strong>Patient Details:</strong><br>
+                                {{ patient.name }}<br>
+                                Contact: {{ patient.contact }}
+                            </td>
+
+                            <td>
+                                <strong>Doctor Details:</strong><br>
+                                {{ doctor.full_name }}<br>
+                                Prescription ID: {{ prescription.prescription_id }}
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+
+            <tr class="heading">
+                <td>Item</td>
+                <td>Price</td>
+            </tr>
+
+            {% for item in items %}
+            <tr class="item">
+                <td>{{ item.medicine_name }} (x{{ item.days }})</td>
+                <td>₹{{ item.price * item.days }}</td>
+            </tr>
+            {% endfor %}
+
+            <tr class="total">
+                <td></td>
+                <td>Total: ₹{{ bill.total_amount }}</td>
+            </tr>
+        </table>
+    </div>
+</body>
+
+</html>
